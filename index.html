@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Estimate International Baccalaureate Diploma Programme points with HL, SL, TOK, and EE inputs."
+    />
+    <title>IB Grade Calculator</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="IB Grade Calculator home">
+        <span class="brand-mark">IB</span>
+        <span>Grade Calculator</span>
+      </a>
+      <nav class="nav" aria-label="Primary navigation">
+        <a href="#calculator">Calculator</a>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Diploma Programme scoring tool</p>
+          <h1>IB Grade Calculator</h1>
+          <p>
+            Enter raw points from the May 2025 grade boundary file, see each
+            percentage, and convert every subject into its final IB grade.
+          </p>
+          <a class="primary-action" href="#calculator">Start calculating</a>
+        </div>
+        <div class="hero-panel" aria-label="Score summary preview">
+          <span class="panel-label">Projected total</span>
+          <strong id="hero-score">42</strong>
+          <span>out of 45 points</span>
+        </div>
+      </section>
+
+      <section class="calculator-section" id="calculator">
+        <div class="section-heading">
+          <p class="eyebrow">Calculator</p>
+          <h2>Enter your subject grades</h2>
+        </div>
+
+        <div class="calculator-layout">
+          <form class="calculator" id="calculator-form">
+            <div class="timezone-control" aria-label="Global timezone setting">
+              <span>Timezone</span>
+              <label>
+                <input type="radio" name="global-timezone" value="1" />
+                TZ1
+              </label>
+              <label>
+                <input type="radio" name="global-timezone" value="2" checked />
+                TZ2
+              </label>
+              <label>
+                <input type="radio" name="global-timezone" value="3" />
+                TZ3
+              </label>
+              <small>TZ0 courses stay available for every timezone.</small>
+            </div>
+            <div class="subjects-header">
+              <span>Group</span>
+              <span>Subject</span>
+              <span>Level</span>
+              <span>Grade</span>
+            </div>
+            <div id="subjects-list" class="subjects-list"></div>
+
+            <fieldset class="core-points">
+              <legend>Core points</legend>
+              <div class="core-row tok-component-row">
+                <label for="tok-essay-points">TOK essay</label>
+                <input id="tok-essay-points" class="core-input tok-component-input" name="tok-essay" type="range" min="0" step="1" />
+                <output id="tok-essay-output" class="core-output">0/10</output>
+                <span id="tok-essay-percent" class="metric">0%</span>
+                <strong id="tok-essay-letter">C</strong>
+              </div>
+              <div class="core-row tok-component-row">
+                <label for="tok-exhibition-points">TOK exhibition</label>
+                <input id="tok-exhibition-points" class="core-input tok-component-input" name="tok-exhibition" type="range" min="0" step="1" />
+                <output id="tok-exhibition-output" class="core-output">0/10</output>
+                <span id="tok-exhibition-percent" class="metric">0%</span>
+                <strong id="tok-exhibition-letter">C</strong>
+              </div>
+              <div class="core-row core-summary-row">
+                <label>TOK final</label>
+                <span class="core-spacer"></span>
+                <output id="tok-output" class="core-output">0/30</output>
+                <span id="tok-percent" class="metric">0%</span>
+                <strong id="tok-letter">C</strong>
+              </div>
+              <div class="core-row">
+                <label for="ee-points">EE points</label>
+                <input id="ee-points" class="core-input" name="ee" type="range" min="0" step="1" />
+                <output id="ee-output" class="core-output">0/34</output>
+                <span id="ee-percent" class="metric">0%</span>
+                <strong id="ee-letter">B</strong>
+              </div>
+            </fieldset>
+          </form>
+
+          <aside class="results" aria-live="polite">
+            <span class="panel-label">Estimated score</span>
+            <div class="score">
+              <strong id="total-score">42</strong>
+              <span>/ 45</span>
+            </div>
+            <dl>
+              <div>
+                <dt>Subject points</dt>
+                <dd id="subject-points">40</dd>
+              </div>
+              <div>
+                <dt>Core points</dt>
+                <dd id="core-points">2</dd>
+              </div>
+              <div>
+                <dt>Diploma status</dt>
+                <dd id="diploma-status">On track</dd>
+              </div>
+            </dl>
+            <p id="result-note">
+              Boundaries are loaded from the provided May 2025 PDF. Final
+              diploma award rules also include conditions beyond total points.
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="feature-band" id="features">
+        <div class="section-heading">
+          <p class="eyebrow">Monetization foundation</p>
+          <h2>Built for a real product path</h2>
+        </div>
+        <div class="feature-grid">
+          <article>
+            <h3>Free calculator</h3>
+            <p>Capture organic search traffic from students checking scores.</p>
+          </article>
+          <article>
+            <h3>Premium insights</h3>
+            <p>Add score targets, subject planning, IA weighting, and PDF reports.</p>
+          </article>
+          <article>
+            <h3>Lead generation</h3>
+            <p>Connect users to tutoring, revision courses, or email sequences.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="pricing-band" id="pricing">
+        <div>
+          <p class="eyebrow">Next step</p>
+          <h2>Ready for ads, affiliate links, or a paid upgrade.</h2>
+        </div>
+        <button class="secondary-action" type="button">Coming soon</button>
+      </section>
+    </main>
+
+    <script src="grade-data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
