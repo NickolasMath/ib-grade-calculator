@@ -987,7 +987,6 @@ function selectedSubjectSummary(row) {
     };
   }
 
-  const finalPercent = row.querySelector(".final-percent").textContent;
   const grade = row.querySelector(".grade-output").textContent;
   return {
     group: group?.label || row.dataset.group,
@@ -995,7 +994,6 @@ function selectedSubjectSummary(row) {
     level: boundary.level,
     timezone: boundary.timezone,
     grade,
-    finalPercent,
   };
 }
 
