@@ -56,12 +56,20 @@ const eeLetter = document.querySelector("#ee-letter");
 const timezoneInputs = [...document.querySelectorAll("input[name='global-timezone']")];
 const advisorForm = document.querySelector("#advisor-form");
 const advisorOutput = document.querySelector("#advisor-output");
+const feedbackForm = document.querySelector("#feedback-form");
+const feedbackStatus = document.querySelector("#feedback-status");
 const aiAdvisorEndpoint =
   window.AI_ADVISOR_ENDPOINT ||
   localStorage.getItem("aiAdvisorEndpoint") ||
   (location.hostname.endsWith("github.io")
     ? "https://ib-grade-calculator-rouge.vercel.app/api/advisor"
     : "/api/advisor");
+const feedbackEndpoint =
+  window.FEEDBACK_ENDPOINT ||
+  localStorage.getItem("feedbackEndpoint") ||
+  (location.hostname.endsWith("github.io")
+    ? "https://ib-grade-calculator-rouge.vercel.app/api/feedback"
+    : "/api/feedback");
 const tokEssayBoundary = tokBoundary.components.find(
   (component) => component.name === "THEORY OF KNOWLEDGE",
 );
@@ -1098,6 +1106,46 @@ async function requestAdvisorGuidance(event) {
   }
 }
 
+async function submitFeedback(event) {
+  event.preventDefault();
+  const formData = new FormData(feedbackForm);
+  const message = String(formData.get("message") || "").trim();
+  const email = String(formData.get("email") || "").trim();
+  const type = String(formData.get("type") || "General suggestion").trim();
+
+  if (message.length < 8) {
+    feedbackStatus.textContent = "Please write a little more detail before submitting.";
+    return;
+  }
+
+  feedbackStatus.textContent = "Submitting feedback...";
+
+  try {
+    const response = await fetch(feedbackEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message,
+        email,
+        type,
+        page: location.href,
+        submittedAt: new Date().toISOString(),
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || "Feedback could not be submitted.");
+    }
+
+    feedbackForm.reset();
+    feedbackStatus.textContent = "Thank you. Your feedback has been submitted.";
+  } catch (error) {
+    feedbackStatus.textContent =
+      `${error.message || "Feedback submission failed."} Please try again later.`;
+  }
+}
+
 function resetComponentsForSelectedBoundary(event) {
   if (
     !event.target.classList.contains("source-group-select") &&
@@ -1176,5 +1224,6 @@ document
   .querySelector("#calculator-form")
   .addEventListener("change", updateResults);
 advisorForm.addEventListener("submit", requestAdvisorGuidance);
+feedbackForm.addEventListener("submit", submitFeedback);
 
 updateResults();
