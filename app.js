@@ -38,6 +38,7 @@ const subjectPoints = document.querySelector("#subject-points");
 const corePoints = document.querySelector("#core-points");
 const diplomaStatus = document.querySelector("#diploma-status");
 const resultNote = document.querySelector("#result-note");
+const diplomaChecklist = document.querySelector("#diploma-checklist");
 const tokEssayPoints = document.querySelector("#tok-essay-points");
 const tokExhibitionPoints = document.querySelector("#tok-exhibition-points");
 const eePoints = document.querySelector("#ee-points");
@@ -948,9 +949,92 @@ function getCorePoints(tok, ee) {
   return coreMatrix[tok]?.[ee] ?? 0;
 }
 
+function diplomaCondition(label, passed) {
+  return { label, passed };
+}
+
+function renderDiplomaChecklist(conditions) {
+  diplomaChecklist.innerHTML = "";
+  conditions.forEach((condition) => {
+    const item = document.createElement("div");
+    item.className = `diploma-condition ${condition.passed ? "is-met" : "is-unmet"}`;
+
+    const icon = document.createElement("span");
+    icon.className = "condition-icon";
+    icon.textContent = condition.passed ? "✓" : "×";
+    icon.setAttribute("aria-hidden", "true");
+
+    const label = document.createElement("span");
+    label.textContent = condition.label;
+
+    item.append(icon, label);
+    diplomaChecklist.append(item);
+  });
+}
+
+function getDiplomaConditions(subjectGrades, tok, ee, coreTotal, total) {
+  const awardedSubjectGrades = subjectGrades.filter((item) => Number.isFinite(item.grade));
+  const allSubjectGradesAwarded = awardedSubjectGrades.length === subjectGroups.length;
+  const hasTokEeGrades = Boolean(tok && ee);
+  const gradeValues = awardedSubjectGrades.map((item) => item.grade);
+  const gradeTwoCount = gradeValues.filter((grade) => grade === 2).length;
+  const gradeThreeOrBelowCount = gradeValues.filter((grade) => grade <= 3).length;
+  const allSubjectsAtLeastTwo =
+    allSubjectGradesAwarded && gradeValues.every((grade) => grade >= 2);
+  const hasFailingCore = tok === "E" || ee === "E";
+
+  const hlGrades = awardedSubjectGrades
+    .filter((item) => item.level === "HL")
+    .map((item) => item.grade)
+    .sort((a, b) => b - a);
+  const slGrades = awardedSubjectGrades
+    .filter((item) => item.level === "SL")
+    .map((item) => item.grade);
+  const countedHlGrades = hlGrades.length >= 4 ? hlGrades.slice(0, 3) : hlGrades;
+  const hlPoints = countedHlGrades.reduce((sum, grade) => sum + grade, 0);
+  const slPoints = slGrades.reduce((sum, grade) => sum + grade, 0);
+  const hlRequirementMet = allSubjectGradesAwarded && hlGrades.length >= 3 && hlPoints >= 12;
+  const slRequirementMet =
+    allSubjectGradesAwarded &&
+    ((slGrades.length === 2 && slPoints >= 5) || (slGrades.length !== 2 && slPoints >= 9));
+
+  return {
+    hasFailingCore,
+    allMet:
+      total >= 24 &&
+      allSubjectGradesAwarded &&
+      hasTokEeGrades &&
+      !hasFailingCore &&
+      allSubjectsAtLeastTwo &&
+      gradeTwoCount <= 2 &&
+      gradeThreeOrBelowCount <= 3 &&
+      hlRequirementMet &&
+      slRequirementMet,
+    conditions: [
+      diplomaCondition("CAS requirements are met", true),
+      diplomaCondition("At least 24 total points", total >= 24),
+      diplomaCondition("Grades awarded in all six subjects, TOK, and EE", allSubjectGradesAwarded && hasTokEeGrades),
+      diplomaCondition("No subject grade below 2", allSubjectsAtLeastTwo),
+      diplomaCondition("No more than two grade 2s", allSubjectGradesAwarded && gradeTwoCount <= 2),
+      diplomaCondition("No more than three grades of 3 or below", allSubjectGradesAwarded && gradeThreeOrBelowCount <= 3),
+      diplomaCondition("At least 12 points from HL subjects", hlRequirementMet),
+      diplomaCondition("At least 9 points from SL subjects, or 5 points if only two SL subjects", slRequirementMet),
+      diplomaCondition("No failing TOK or EE condition", !hasFailingCore),
+    ],
+  };
+}
+
 function updateResults() {
-  const subjectTotal = [...document.querySelectorAll(".subject-row")].reduce(
-    (sum, row) => sum + updateSubjectRow(row),
+  const subjectGrades = [...document.querySelectorAll(".subject-row")].map((row) => {
+    const grade = updateSubjectRow(row);
+    const boundary = getRowBoundary(row);
+    return {
+      grade: boundary ? grade : Number.NaN,
+      level: boundary?.level || "",
+    };
+  });
+  const subjectTotal = subjectGrades.reduce(
+    (sum, item) => sum + (Number.isFinite(item.grade) ? item.grade : 0),
     0,
   );
   const tok = updateTokResult();
@@ -963,14 +1047,15 @@ function updateResults() {
   );
   const coreTotal = getCorePoints(tok, ee);
   const total = subjectTotal + coreTotal;
-  const hasFailingCore = tok === "E" || ee === "E";
+  const diplomaRules = getDiplomaConditions(subjectGrades, tok, ee, coreTotal, total);
 
   totalScore.textContent = total;
   heroScore.textContent = total;
   subjectPoints.textContent = subjectTotal;
   corePoints.textContent = coreTotal;
+  renderDiplomaChecklist(diplomaRules.conditions);
 
-  if (hasFailingCore) {
+  if (diplomaRules.hasFailingCore) {
     diplomaStatus.textContent = "At risk";
     diplomaStatus.style.color = "var(--danger)";
     resultNote.textContent =
@@ -978,16 +1063,16 @@ function updateResults() {
     return;
   }
 
-  if (total >= 24) {
-    diplomaStatus.textContent = "On track";
+  if (diplomaRules.allMet) {
+    diplomaStatus.textContent = "Award conditions met";
     diplomaStatus.style.color = "var(--accent-dark)";
     resultNote.textContent =
-      "Component points are calculated with subject-specific assessment weights where available.";
+      "This estimate meets the main IB Diploma award conditions shown below. CAS is assumed complete.";
   } else {
-    diplomaStatus.textContent = "Below threshold";
+    diplomaStatus.textContent = total >= 24 ? "Conditions incomplete" : "Below threshold";
     diplomaStatus.style.color = "var(--danger)";
     resultNote.textContent =
-      "This estimate is below 24 points. Adjust weighted component sliders to identify the fastest grade improvements.";
+      "Diploma eligibility depends on total points and the listed award conditions. CAS is assumed complete.";
   }
 }
 
