@@ -18,6 +18,7 @@
       </a>
       <nav class="nav" aria-label="Primary navigation">
         <a href="#calculator">Calculator</a>
+        <a href="#advisor">AI Advisor</a>
         <a href="#features">Features</a>
         <a href="#pricing">Pricing</a>
       </nav>
@@ -128,6 +129,49 @@
             <p id="result-note">
               Boundaries are loaded from the provided May 2025 PDF. Final
               diploma award rules also include conditions beyond total points.
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="advisor-band" id="advisor">
+        <div class="section-heading">
+          <p class="eyebrow">AI admissions advisor</p>
+          <h2>Turn this IB profile into an application strategy</h2>
+        </div>
+
+        <div class="advisor-layout">
+          <form class="advisor-form" id="advisor-form">
+            <label>
+              Target countries or regions
+              <input id="advisor-countries" name="countries" type="text" placeholder="UK, Canada, Hong Kong, Singapore" />
+            </label>
+            <label>
+              Intended major
+              <input id="advisor-major" name="major" type="text" placeholder="Economics, Computer Science, Medicine" />
+            </label>
+            <label>
+              Budget range
+              <input id="advisor-budget" name="budget" type="text" placeholder="Annual tuition and living budget" />
+            </label>
+            <label>
+              English test score
+              <input id="advisor-english" name="english" type="text" placeholder="IELTS 7.0, TOEFL 100, or pending" />
+            </label>
+            <label class="advisor-wide">
+              Priorities and notes
+              <textarea id="advisor-notes" name="notes" rows="4" placeholder="Scholarship needs, preferred city size, internship goals, family constraints, or schools already considered"></textarea>
+            </label>
+            <button class="secondary-action" type="submit">Generate AI guidance</button>
+          </form>
+
+          <aside class="advisor-result" aria-live="polite">
+            <span class="panel-label">Guidance preview</span>
+            <div id="advisor-output">
+              Complete the fields and generate a first-pass Reach / Target / Safety strategy from the current IB profile.
+            </div>
+            <p class="advisor-disclaimer">
+              AI guidance is planning support, not an admission guarantee. Verify official university requirements before applying.
             </p>
           </aside>
         </div>
