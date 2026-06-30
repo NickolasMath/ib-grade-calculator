@@ -632,6 +632,7 @@ dd {
 .tool-card {
   display: grid;
   gap: 8px;
+  position: relative;
   padding: 22px;
   transition:
     border-color 160ms ease,
@@ -643,6 +644,22 @@ dd {
   border-color: rgba(15, 118, 110, 0.45);
   box-shadow: 0 12px 30px rgba(23, 32, 42, 0.1);
   transform: translateY(-2px);
+}
+
+.tool-card.is-disabled {
+  cursor: default;
+}
+
+.tool-status {
+  justify-self: start;
+  border: 1px solid #f0c36a;
+  border-radius: 999px;
+  background: #fff7df;
+  color: #7c5200;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 750;
+  line-height: 1.35;
 }
 
 .feature-grid h3 {
