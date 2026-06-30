@@ -57,7 +57,11 @@ const timezoneInputs = [...document.querySelectorAll("input[name='global-timezon
 const advisorForm = document.querySelector("#advisor-form");
 const advisorOutput = document.querySelector("#advisor-output");
 const aiAdvisorEndpoint =
-  window.AI_ADVISOR_ENDPOINT || localStorage.getItem("aiAdvisorEndpoint") || "/api/advisor";
+  window.AI_ADVISOR_ENDPOINT ||
+  localStorage.getItem("aiAdvisorEndpoint") ||
+  (location.hostname.endsWith("github.io")
+    ? "https://ib-grade-calculator-rouge.vercel.app/api/advisor"
+    : "/api/advisor");
 const tokEssayBoundary = tokBoundary.components.find(
   (component) => component.name === "THEORY OF KNOWLEDGE",
 );
