@@ -19,6 +19,18 @@ OPENAI_API_KEY=your_api_key
 OPENAI_MODEL=gpt-4.1-mini
 ```
 
+## Vercel deployment
+
+The current project includes `vercel.json` and `api/advisor.js`, so it can be deployed as a Vercel site with a serverless API.
+
+Using Vercel CLI:
+
+```powershell
+pnpm dlx vercel --prod --yes --token YOUR_VERCEL_TOKEN -e OPENAI_API_KEY=YOUR_OPENAI_API_KEY -e OPENAI_MODEL=gpt-4.1-mini
+```
+
+Use the Vercel URL as the live AI-enabled site. GitHub Pages can still host the static backup, but it cannot execute `/api/advisor`.
+
 The frontend calls:
 
 ```text
