@@ -7,14 +7,17 @@
       name="description"
       content="Estimate International Baccalaureate Diploma Programme points with HL, SL, TOK, and EE inputs."
     />
-    <title>IB Grade Calculator</title>
+    <title>NickoMath IB Grade Calculator</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="#" aria-label="IB Grade Calculator home">
-        <span class="brand-mark">IB</span>
-        <span>Grade Calculator</span>
+      <a class="brand" href="#" aria-label="NickoMath IB Grade Calculator home">
+        <span class="brand-mark">NM</span>
+        <span class="brand-text">
+          <span>NickoMath</span>
+          <small>IB Grade Calculator</small>
+        </span>
       </a>
       <nav class="nav" aria-label="Primary navigation">
         <a href="#calculator">Calculator</a>
@@ -218,6 +221,52 @@
         <button class="secondary-action" type="button">Coming soon</button>
       </section>
     </main>
+
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <span class="brand-mark">NM</span>
+        <div>
+          <strong>NickoMath IB Grade Calculator</strong>
+          <p>
+            A NickoMath sub-tool for IB score estimation, AI-assisted planning, and future IB learning services.
+          </p>
+        </div>
+      </div>
+
+      <form class="feedback-form" id="feedback-form">
+        <div class="feedback-heading">
+          <p class="eyebrow">Feedback box</p>
+          <h2>Help improve this website</h2>
+        </div>
+        <label>
+          Your feedback
+          <textarea id="feedback-message" name="message" rows="4" required placeholder="Tell us what should be improved, added, or fixed."></textarea>
+        </label>
+        <div class="feedback-grid">
+          <label>
+            Contact email
+            <input id="feedback-email" name="email" type="email" placeholder="Optional" />
+          </label>
+          <label>
+            Feedback type
+            <select id="feedback-type" name="type">
+              <option value="General suggestion">General suggestion</option>
+              <option value="Bug report">Bug report</option>
+              <option value="Missing subject or boundary">Missing subject or boundary</option>
+              <option value="AI advisor improvement">AI advisor improvement</option>
+              <option value="Business partnership">Business partnership</option>
+            </select>
+          </label>
+        </div>
+        <button class="secondary-action" type="submit">Submit feedback</button>
+        <p class="feedback-status" id="feedback-status" aria-live="polite"></p>
+      </form>
+
+      <div class="footer-legal">
+        <span>Copyright 2026 NickoMath. All rights reserved.</span>
+        <span>IB is a trademark of the International Baccalaureate Organization. This website is not affiliated with or endorsed by the IBO.</span>
+      </div>
+    </footer>
 
     <script src="grade-data.js"></script>
     <script src="app.js"></script>
