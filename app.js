@@ -1,6 +1,6 @@
 const allBoundaries = window.IB_GRADE_BOUNDARIES || [];
 const subjectBoundaries = allBoundaries.filter(
-  (entry) => !["TK", "EE"].includes(entry.level),
+  (entry) => !["TK", "EE"].includes(entry.level) && entry.option !== "REF PROJECT",
 );
 const tokBoundary = allBoundaries.find((entry) => entry.level === "TK");
 const eeBoundary = allBoundaries.find((entry) => entry.level === "EE");
