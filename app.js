@@ -1074,15 +1074,23 @@ async function requestAdvisorGuidance(event) {
     const deploymentHint =
       lowerMessage.includes("failed to fetch") ||
       lowerMessage.includes("endpoint is not available") ||
-      lowerMessage.includes("openai_api_key is not configured");
+      lowerMessage.includes("openai_api_key is not configured") ||
+      lowerMessage.includes("groq_api_key is not configured");
     const quotaHint =
       lowerMessage.includes("quota") ||
       lowerMessage.includes("billing") ||
       lowerMessage.includes("insufficient_quota");
+    const invalidKeyHint = lowerMessage.includes("invalid api key");
 
     if (quotaHint) {
       advisorOutput.textContent =
         `${message}\n\nBilling note: the AI backend is connected, but the OpenAI account has no available API quota. Add billing credits or increase the API usage limit in the OpenAI Platform billing settings, then try again.`;
+      return;
+    }
+
+    if (invalidKeyHint) {
+      advisorOutput.textContent =
+        `${message}\n\nAPI key note: the AI backend is connected, but the provider rejected the key. Check the Vercel environment variable for the selected provider. For Groq, make sure GROQ_API_KEY is a valid Groq key and redeploy after saving it.`;
       return;
     }
 
