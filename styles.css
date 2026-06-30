@@ -304,6 +304,12 @@ select {
   text-overflow: ellipsis;
 }
 
+.subject-picker {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
 .group-label {
   color: var(--ink);
   font-size: 0.92rem;
@@ -426,6 +432,7 @@ select:focus {
 }
 
 .core-summary-row {
+  grid-template-columns: minmax(120px, 0.8fr) minmax(160px, 1.2fr) 90px 60px;
   border-top: 1px solid var(--line);
   padding-top: 12px;
 }
@@ -578,6 +585,10 @@ dd {
     grid-template-columns: minmax(110px, 0.8fr) minmax(130px, 1.2fr) 72px 82px 58px;
     gap: 10px;
   }
+
+  .core-summary-row {
+    grid-template-columns: minmax(110px, 0.8fr) minmax(130px, 1.2fr) 82px 58px;
+  }
 }
 
 @media (max-width: 700px) {
@@ -614,6 +625,10 @@ dd {
   }
 
   .core-row {
+    grid-template-columns: 1fr;
+  }
+
+  .core-summary-row {
     grid-template-columns: 1fr;
   }
 
