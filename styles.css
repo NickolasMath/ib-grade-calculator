@@ -182,6 +182,7 @@ main {
 }
 
 .calculator-section,
+.advisor-band,
 .feature-band,
 .pricing-band {
   padding: clamp(44px, 7vw, 82px) clamp(18px, 5vw, 64px);
@@ -516,6 +517,80 @@ dd {
   background: white;
 }
 
+.advisor-band {
+  background: #ffffff;
+  border-top: 1px solid var(--line);
+}
+
+.advisor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  gap: 22px;
+  align-items: start;
+}
+
+.advisor-form,
+.advisor-result {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  padding: 18px;
+}
+
+.advisor-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.advisor-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.advisor-form textarea {
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--ink);
+  font: inherit;
+  padding: 10px;
+}
+
+.advisor-wide,
+.advisor-form button {
+  grid-column: 1 / -1;
+}
+
+.advisor-result {
+  display: grid;
+  gap: 14px;
+}
+
+#advisor-output {
+  min-height: 220px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #f8fafc;
+  padding: 14px;
+  color: var(--ink);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.advisor-disclaimer {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -545,7 +620,8 @@ dd {
 }
 
 @media (max-width: 1120px) {
-  .calculator-layout {
+  .calculator-layout,
+  .advisor-layout {
     grid-template-columns: 1fr;
   }
 
@@ -562,7 +638,8 @@ dd {
   }
 
   .hero,
-  .feature-grid {
+  .feature-grid,
+  .advisor-form {
     grid-template-columns: 1fr;
   }
 
