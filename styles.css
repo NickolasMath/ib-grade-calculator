@@ -798,14 +798,20 @@ dd {
 }
 
 .footer-legal {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
   border-top: 1px solid var(--line);
   padding-top: 18px;
   color: var(--muted);
   font-size: 0.85rem;
   line-height: 1.5;
+}
+
+.footer-legal > span,
+.footer-legal > .legal-links {
+  display: block;
+  width: 100%;
 }
 
 .resources-band {
