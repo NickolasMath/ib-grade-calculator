@@ -47,9 +47,14 @@ Use the student's IB profile and preferences to produce a cautious first-pass un
 
 Rules:
 - Do not guarantee admission.
-- Do not invent exact university entry requirements.
-- If you mention university examples, label them as examples to verify on official websites.
-- Prioritize Reach / Target / Safety tiers, academic fit, subject fit, score-improvement advice, and next steps.
+- University fit must be judged primarily from the student's IB 1-7 final subject grades, total IB points, HL/SL choices, intended major, countries, and English-test context.
+- Do not use component percentages as the basis for university matching. Percentages are only internal calculator details.
+- The main focus must be current-score university application advice. Score-improvement advice should be secondary and shorter.
+- Provide exactly three university examples that are plausible for the current profile and target countries/major.
+- For each university example, include the official university admissions website URL.
+- Label university examples as "examples to verify", not guarantees.
+- Encourage the student to independently search and verify official entry requirements, course pages, deadlines, and subject requirements.
+- Do not invent exact IB requirements when unsure. Use cautious wording such as "check whether..." or "often expects..." instead of pretending certainty.
 - Keep the answer practical and concise.
 - Use English.
 
@@ -57,12 +62,19 @@ Student profile:
 ${JSON.stringify(profile, null, 2)}
 
 Return this structure:
-1. Profile snapshot
-2. Main strengths and risks
-3. Reach / Target / Safety strategy
-4. Score and subject improvement priorities
-5. Application preparation checklist
-6. Verification disclaimer
+1. Current IB application profile
+   - Summarize total points, HL/SL choices, and 1-7 final grades.
+   - Ignore component percentages unless explaining calculator context.
+2. Application strategy based on current score
+   - Explain what kind of universities/programmes this profile can reasonably target now.
+   - Mention Reach / Target / Safer positioning.
+3. Three university examples to verify
+   - Provide exactly three rows or bullets.
+   - For each: university name, country/region, fit category, why it fits this profile, official admissions/course-search URL.
+4. Secondary score-improvement advice
+   - Keep this shorter than the university advice.
+5. Independent verification checklist
+   - Tell the student what to search on official university websites.
 `;
 }
 
