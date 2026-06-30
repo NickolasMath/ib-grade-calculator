@@ -60,6 +60,24 @@ const tokEssayBoundary = tokBoundary.components.find(
 const tokExhibitionBoundary = tokBoundary.components.find(
   (component) => component.name === "TOK EXHIBITION",
 );
+const pendingValue = "";
+const tokEssayWeight = 2 / 3;
+const tokExhibitionWeight = 1 / 3;
+const tokEssayWeightLabel = "66.6%";
+const tokExhibitionWeightLabel = "33.3%";
+const languageSubjectTypes = {
+  studies: [
+    { value: "language-a-lal", label: "Language A: LAL" },
+    { value: "language-a-literature", label: "Language A: Literature" },
+    { value: "literature-and-performance", label: "Literature and Performance" },
+  ],
+  acquisition: [
+    { value: "language-b", label: "Language B" },
+    { value: "language-ab-initio", label: "Language ab initio" },
+    { value: "language-and-culture", label: "Language and Culture" },
+    { value: "classical-latin", label: "Classical Languages: Latin" },
+  ],
+};
 
 function normalizeCourseOption(option) {
   return option
@@ -140,6 +158,77 @@ function groupsForCourse(course) {
   return [inferSubjectGroup(course)];
 }
 
+function isLanguageGroup(groupId) {
+  return Boolean(languageSubjectTypes[groupId]);
+}
+
+function courseTypeForCourse(course, groupId) {
+  if (groupId === "studies") {
+    if (course === "LITERATURE AND PERFORMANCE") {
+      return "literature-and-performance";
+    }
+    if (course.includes(" A: Lang and Literature")) {
+      return "language-a-lal";
+    }
+    if (course.includes(" A: Literature")) {
+      return "language-a-literature";
+    }
+  }
+
+  if (groupId === "acquisition") {
+    if (course === "LANGUAGE AND CULTURE") {
+      return "language-and-culture";
+    }
+    if (course === "LATIN") {
+      return "classical-latin";
+    }
+    if (course.includes(" AB.")) {
+      return "language-ab-initio";
+    }
+    if (/\b[A-Z]+ B\b/.test(course)) {
+      return "language-b";
+    }
+  }
+
+  return null;
+}
+
+function displayCase(value) {
+  return value
+    .toLowerCase()
+    .split(/([\s.-]+)/)
+    .map((part) =>
+      /^[a-z]/.test(part) ? part.charAt(0).toUpperCase() + part.slice(1) : part,
+    )
+    .join("");
+}
+
+function languageLabelForCourse(course, groupId) {
+  const type = courseTypeForCourse(course, groupId);
+  if (type === "language-a-lal") {
+    return displayCase(course.replace(" A: Lang and Literature", ""));
+  }
+  if (type === "language-a-literature") {
+    return displayCase(course.replace(" A: Literature", ""));
+  }
+  if (type === "language-b") {
+    return displayCase(course.replace(/\s+B(\s+-\s+)?/, "$1"));
+  }
+  if (type === "language-ab-initio") {
+    return displayCase(course.replace(" AB.", ""));
+  }
+  if (type === "language-and-culture") {
+    return "Language and Culture";
+  }
+  if (type === "classical-latin") {
+    return "Latin";
+  }
+  if (type === "literature-and-performance") {
+    return "Literature and Performance";
+  }
+  return displayCase(course);
+}
+
 const enrichedBoundaries = subjectBoundaries.map((entry) => ({
   ...entry,
   course: normalizeCourseOption(entry.option),
@@ -213,11 +302,24 @@ function availableCoursesForGroup(groupId) {
   );
 }
 
+function availableLanguageCoursesForType(groupId, type) {
+  return availableCoursesForGroup(groupId).filter(
+    (course) => courseTypeForCourse(course, groupId) === type,
+  );
+}
+
+function selectedCourseForRow(row) {
+  if (isLanguageGroup(row.dataset.group)) {
+    return row.querySelector(".language-select")?.value || pendingValue;
+  }
+  return row.querySelector(".subject-select")?.value || pendingValue;
+}
+
 function getSelectedCoursesByGroup() {
   return Object.fromEntries(
     [...document.querySelectorAll(".subject-row")].map((row) => [
       row.dataset.group,
-      row.querySelector(".subject-select")?.value,
+      selectedCourseForRow(row),
     ]),
   );
 }
@@ -230,6 +332,16 @@ function shouldDisableCourse(course, groupId) {
     ([otherGroupId, selectedCourse]) =>
       otherGroupId !== groupId && selectedCourse === course,
   );
+}
+
+function isLanguageTypeDisabled(type, groupId) {
+  if (!availableLanguageCoursesForType(groupId, type).length) {
+    return true;
+  }
+  if (type !== "literature-and-performance") {
+    return false;
+  }
+  return shouldDisableCourse("LITERATURE AND PERFORMANCE", groupId);
 }
 
 function findDefaultSubject(groupId) {
@@ -255,6 +367,48 @@ function optionsMarkup(values, selectedValue, formatter = (value) => value, disa
         `<option value="${value}"${value === selectedValue ? " selected" : ""}${disabled(value) ? " disabled" : ""}>${formatter(value)}</option>`,
     )
     .join("");
+}
+
+function placeholderOption(label, selectedValue) {
+  return `<option value="${pendingValue}"${selectedValue === pendingValue ? " selected" : ""}>${label}</option>`;
+}
+
+function subjectOptionsMarkup(groupId, selectedValue) {
+  if (isLanguageGroup(groupId)) {
+    return (
+      placeholderOption("Pending", selectedValue) +
+      languageSubjectTypes[groupId]
+        .map(
+          (type) =>
+            `<option value="${type.value}"${type.value === selectedValue ? " selected" : ""}${isLanguageTypeDisabled(type.value, groupId) ? " disabled" : ""}>${type.label}</option>`,
+        )
+        .join("")
+    );
+  }
+
+  const courses = availableCoursesForGroup(groupId);
+  return (
+    placeholderOption("Pending", selectedValue) +
+    optionsMarkup(
+      courses,
+      selectedValue,
+      (value) => value,
+      (value) => shouldDisableCourse(value, groupId),
+    )
+  );
+}
+
+function languageOptionsMarkup(groupId, type, selectedValue) {
+  const courses = availableLanguageCoursesForType(groupId, type);
+  return (
+    placeholderOption("Select language", selectedValue) +
+    optionsMarkup(
+      courses,
+      selectedValue,
+      (value) => languageLabelForCourse(value, groupId),
+      (value) => shouldDisableCourse(value, groupId),
+    )
+  );
 }
 
 function componentWeightFor(boundary, component) {
@@ -476,13 +630,16 @@ function createComponentControl(component, index, boundary) {
 
 function renderComponents(row, boundary) {
   const list = row.querySelector(".components-list");
+  if (!boundary) {
+    list.innerHTML = "";
+    return;
+  }
   list.innerHTML = componentsFor(boundary)
     .map((component, index) => createComponentControl(component, index, boundary))
     .join("");
 }
 
 function createSubjectRow(group) {
-  const selected = findDefaultSubject(group.id);
   const row = document.createElement("div");
   row.className = "subject-row";
   row.dataset.group = group.id;
@@ -490,72 +647,134 @@ function createSubjectRow(group) {
   row.innerHTML = `
     <div class="subject-controls">
       <span class="group-label">${group.label}</span>
-      <select class="subject-select" name="subject-${group.id}" aria-label="${group.label} subject">
-        ${optionsMarkup(
-          availableCoursesForGroup(group.id),
-          selected.course,
-          (value) => value,
-          (value) => shouldDisableCourse(value, group.id),
-        )}
+      <div class="subject-picker">
+        <select class="subject-select" name="subject-${group.id}" aria-label="${group.label} subject">
+          ${subjectOptionsMarkup(group.id, pendingValue)}
+        </select>
+        <select class="language-select" name="language-${group.id}" aria-label="${group.label} language" hidden disabled>
+          ${placeholderOption("Select language", pendingValue)}
+        </select>
+      </div>
+      <select class="level-select" name="level-${group.id}" aria-label="${group.label} level" disabled>
+        ${placeholderOption("Level", pendingValue)}
       </select>
-      <select class="level-select" name="level-${group.id}" aria-label="${group.label} level">
-        ${optionsMarkup(
-          getLevels(selected.course).filter((level) =>
-            isAvailableForGlobalTimezone(selected.course, level),
-          ),
-          selected.level,
-        )}
-      </select>
-      <strong class="grade-output">0</strong>
+      <strong class="grade-output">Pending</strong>
     </div>
     <div class="components-list"></div>
     <div class="final-row">
       <span>Weighted final percent</span>
-      <strong class="final-percent">0.0%</strong>
+      <strong class="final-percent">Pending</strong>
     </div>
   `;
 
-  renderComponents(row, selected);
+  renderComponents(row, null);
   return row;
 }
 
 function syncDependentSelects(row) {
   const subjectSelect = row.querySelector(".subject-select");
+  const languageSelect = row.querySelector(".language-select");
   const levelSelect = row.querySelector(".level-select");
   const groupId = row.dataset.group;
+
+  if (isLanguageGroup(groupId)) {
+    const currentType = languageSubjectTypes[groupId].some(
+      (type) => type.value === subjectSelect.value,
+    )
+      ? subjectSelect.value
+      : pendingValue;
+    subjectSelect.innerHTML = subjectOptionsMarkup(groupId, currentType);
+    subjectSelect.value = currentType;
+
+    if (!currentType) {
+      languageSelect.hidden = true;
+      languageSelect.disabled = true;
+      languageSelect.innerHTML = placeholderOption("Select language", pendingValue);
+      levelSelect.innerHTML = placeholderOption("Level", pendingValue);
+      levelSelect.value = pendingValue;
+      levelSelect.disabled = true;
+      return;
+    }
+
+    const languageCourses = availableLanguageCoursesForType(groupId, currentType);
+    const currentCourse = languageCourses.includes(languageSelect.value)
+      ? languageSelect.value
+      : pendingValue;
+    languageSelect.hidden = false;
+    languageSelect.disabled = false;
+    languageSelect.innerHTML = languageOptionsMarkup(groupId, currentType, currentCourse);
+    languageSelect.value = currentCourse;
+
+    if (!currentCourse) {
+      levelSelect.innerHTML = placeholderOption("Level", pendingValue);
+      levelSelect.value = pendingValue;
+      levelSelect.disabled = true;
+      return;
+    }
+
+    const levels = getLevels(currentCourse).filter((level) =>
+      isAvailableForGlobalTimezone(currentCourse, level),
+    );
+    const selectedLevel = levels.includes(levelSelect.value)
+      ? levelSelect.value
+      : pendingValue;
+    levelSelect.innerHTML =
+      placeholderOption("Level", selectedLevel) + optionsMarkup(levels, selectedLevel);
+    levelSelect.value = selectedLevel;
+    levelSelect.disabled = false;
+    return;
+  }
 
   const courses = availableCoursesForGroup(groupId);
   const currentCourse = courses.includes(subjectSelect.value)
     ? subjectSelect.value
-    : courses[0];
-  subjectSelect.innerHTML = optionsMarkup(
-    courses,
-    currentCourse,
-    (value) => value,
-    (value) => shouldDisableCourse(value, groupId),
-  );
+    : pendingValue;
+  subjectSelect.innerHTML = subjectOptionsMarkup(groupId, currentCourse);
   subjectSelect.value = currentCourse;
+
+  if (!currentCourse) {
+    levelSelect.innerHTML = placeholderOption("Level", pendingValue);
+    levelSelect.value = pendingValue;
+    levelSelect.disabled = true;
+    return;
+  }
 
   const levels = getLevels(currentCourse).filter((level) =>
     isAvailableForGlobalTimezone(currentCourse, level),
   );
   const selectedLevel = levels.includes(levelSelect.value)
     ? levelSelect.value
-    : levels[0];
-  levelSelect.innerHTML = optionsMarkup(levels, selectedLevel);
+    : pendingValue;
+  levelSelect.innerHTML =
+    placeholderOption("Level", selectedLevel) + optionsMarkup(levels, selectedLevel);
   levelSelect.value = selectedLevel;
+  levelSelect.disabled = false;
 }
 
 function getRowBoundary(row) {
   syncDependentSelects(row);
-  return getBoundaryForGlobalTimezone(
-    row.querySelector(".subject-select").value,
-    row.querySelector(".level-select").value,
-  );
+  const course = selectedCourseForRow(row);
+  const level = row.querySelector(".level-select").value;
+  if (!course || !level) {
+    return null;
+  }
+  return getBoundaryForGlobalTimezone(course, level);
 }
 
 function updateSubjectRow(row) {
   const boundary = getRowBoundary(row);
+  if (!boundary) {
+    row.querySelector(".grade-output").textContent = "Pending";
+    row.querySelector(".final-percent").textContent = "Pending";
+    renderComponents(row, null);
+    row.dataset.boundaryKey = "";
+    return 0;
+  }
+
+  if (!row.querySelector(".component-input")) {
+    renderComponents(row, boundary);
+  }
+
   const componentInputs = [...row.querySelectorAll(".component-input")];
   let hasWeights = true;
   let weightTotal = 0;
@@ -589,19 +808,7 @@ function updateSubjectRow(row) {
 
 function refreshCourseAvailability() {
   [...document.querySelectorAll(".subject-row")].forEach((row) => {
-    const subjectSelect = row.querySelector(".subject-select");
-    const selectedCourse = subjectSelect.value;
-    const groupId = row.dataset.group;
-    const courses = availableCoursesForGroup(groupId);
-    subjectSelect.innerHTML = optionsMarkup(
-      courses,
-      selectedCourse,
-      (value) => value,
-      (value) => shouldDisableCourse(value, groupId),
-    );
-    subjectSelect.value = courses.includes(selectedCourse)
-      ? selectedCourse
-      : courses[0];
+    syncDependentSelects(row);
   });
 }
 
@@ -616,10 +823,8 @@ function updateCoreResult(input, boundary, outputNode, percentNode, letterNode) 
 
 function updateTokComponent(input, boundary, outputNode, percentNode, letterNode) {
   const points = clampPointInput(input, boundary.max);
-  const letter = getGrade(points, boundary);
   outputNode.textContent = `${points}/${boundary.max}`;
   percentNode.textContent = formatPercent(points, boundary.max);
-  letterNode.textContent = letter;
   return points;
 }
 
@@ -631,6 +836,7 @@ function updateTokResult() {
     tokEssayPercent,
     tokEssayLetter,
   );
+  tokEssayLetter.textContent = tokEssayWeightLabel;
   const exhibition = updateTokComponent(
     tokExhibitionPoints,
     tokExhibitionBoundary,
@@ -638,13 +844,14 @@ function updateTokResult() {
     tokExhibitionPercent,
     tokExhibitionLetter,
   );
-  const rawTotal = essay + exhibition;
-  const rawMax = tokEssayBoundary.max + tokExhibitionBoundary.max;
-  const finalPoints = Math.round((rawTotal / rawMax) * tokBoundary.max);
+  tokExhibitionLetter.textContent = tokExhibitionWeightLabel;
+  const finalPercent =
+    (essay / tokEssayBoundary.max) * 100 * tokEssayWeight +
+    (exhibition / tokExhibitionBoundary.max) * 100 * tokExhibitionWeight;
+  const finalPoints = Math.round((finalPercent / 100) * tokBoundary.max);
   const letter = getGrade(finalPoints, tokBoundary);
 
-  tokOutput.textContent = `${finalPoints}/${tokBoundary.max}`;
-  tokPercent.textContent = formatPercent(finalPoints, tokBoundary.max);
+  tokPercent.textContent = `${finalPercent.toFixed(1)}%`;
   tokLetter.textContent = letter;
   return letter;
 }
@@ -699,6 +906,7 @@ function updateResults() {
 function resetComponentsForSelectedBoundary(event) {
   if (
     !event.target.classList.contains("subject-select") &&
+    !event.target.classList.contains("language-select") &&
     !event.target.classList.contains("level-select") &&
     event.target.name !== "global-timezone"
   ) {
@@ -710,15 +918,24 @@ function resetComponentsForSelectedBoundary(event) {
     [...document.querySelectorAll(".subject-row")].forEach((subjectRow) => {
       const boundary = getRowBoundary(subjectRow);
       renderComponents(subjectRow, boundary);
-      subjectRow.dataset.boundaryKey = `${boundary.course}|${boundary.level}|${boundary.timezone}`;
+      subjectRow.dataset.boundaryKey = boundary
+        ? `${boundary.course}|${boundary.level}|${boundary.timezone}`
+        : "";
     });
     refreshCourseAvailability();
     return;
   }
+  if (event.target.classList.contains("subject-select") && isLanguageGroup(row.dataset.group)) {
+    row.querySelector(".language-select").value = pendingValue;
+    row.querySelector(".level-select").value = pendingValue;
+  }
+  if (event.target.classList.contains("language-select")) {
+    row.querySelector(".level-select").value = pendingValue;
+  }
   const previousKey = row.dataset.boundaryKey;
   syncDependentSelects(row);
   const boundary = getRowBoundary(row);
-  const nextKey = `${boundary.course}|${boundary.level}|${boundary.timezone}`;
+  const nextKey = boundary ? `${boundary.course}|${boundary.level}|${boundary.timezone}` : "";
 
   if (previousKey !== nextKey) {
     renderComponents(row, boundary);
@@ -729,8 +946,7 @@ function resetComponentsForSelectedBoundary(event) {
 
 subjectGroups.forEach((group) => {
   const row = createSubjectRow(group);
-  const boundary = getRowBoundary(row);
-  row.dataset.boundaryKey = `${boundary.course}|${boundary.level}|${boundary.timezone}`;
+  row.dataset.boundaryKey = "";
   subjectsList.append(row);
 });
 
