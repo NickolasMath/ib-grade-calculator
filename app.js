@@ -78,6 +78,14 @@ const languageSubjectTypes = {
     { value: "classical-latin", label: "Classical Languages: Latin" },
   ],
 };
+const groupSixSources = [
+  { value: "arts", label: "Arts" },
+  { value: "studies", label: "Group 1: Studies in language and literature" },
+  { value: "acquisition", label: "Group 2: Language acquisition" },
+  { value: "societies", label: "Group 3: Individuals and societies" },
+  { value: "sciences", label: "Group 4: Sciences" },
+  { value: "math", label: "Group 5: Mathematics" },
+];
 
 function normalizeCourseOption(option) {
   return option
@@ -308,8 +316,16 @@ function availableLanguageCoursesForType(groupId, type) {
   );
 }
 
+function effectiveGroupForRow(row) {
+  if (row.dataset.group !== "arts") {
+    return row.dataset.group;
+  }
+  return row.querySelector(".source-group-select")?.value || pendingValue;
+}
+
 function selectedCourseForRow(row) {
-  if (isLanguageGroup(row.dataset.group)) {
+  const effectiveGroupId = effectiveGroupForRow(row);
+  if (isLanguageGroup(effectiveGroupId)) {
     return row.querySelector(".language-select")?.value || pendingValue;
   }
   return row.querySelector(".subject-select")?.value || pendingValue;
@@ -334,14 +350,14 @@ function shouldDisableCourse(course, groupId) {
   );
 }
 
-function isLanguageTypeDisabled(type, groupId) {
+function isLanguageTypeDisabled(type, groupId, ownerGroupId = groupId) {
   if (!availableLanguageCoursesForType(groupId, type).length) {
     return true;
   }
   if (type !== "literature-and-performance") {
     return false;
   }
-  return shouldDisableCourse("LITERATURE AND PERFORMANCE", groupId);
+  return shouldDisableCourse("LITERATURE AND PERFORMANCE", ownerGroupId);
 }
 
 function findDefaultSubject(groupId) {
@@ -373,14 +389,14 @@ function placeholderOption(label, selectedValue) {
   return `<option value="${pendingValue}"${selectedValue === pendingValue ? " selected" : ""}>${label}</option>`;
 }
 
-function subjectOptionsMarkup(groupId, selectedValue) {
+function subjectOptionsMarkup(groupId, selectedValue, ownerGroupId = groupId) {
   if (isLanguageGroup(groupId)) {
     return (
       placeholderOption("Pending", selectedValue) +
       languageSubjectTypes[groupId]
         .map(
           (type) =>
-            `<option value="${type.value}"${type.value === selectedValue ? " selected" : ""}${isLanguageTypeDisabled(type.value, groupId) ? " disabled" : ""}>${type.label}</option>`,
+            `<option value="${type.value}"${type.value === selectedValue ? " selected" : ""}${isLanguageTypeDisabled(type.value, groupId, ownerGroupId) ? " disabled" : ""}>${type.label}</option>`,
         )
         .join("")
     );
@@ -393,12 +409,12 @@ function subjectOptionsMarkup(groupId, selectedValue) {
       courses,
       selectedValue,
       (value) => value,
-      (value) => shouldDisableCourse(value, groupId),
+      (value) => shouldDisableCourse(value, ownerGroupId),
     )
   );
 }
 
-function languageOptionsMarkup(groupId, type, selectedValue) {
+function languageOptionsMarkup(groupId, type, selectedValue, ownerGroupId = groupId) {
   const courses = availableLanguageCoursesForType(groupId, type);
   return (
     placeholderOption("Select language", selectedValue) +
@@ -406,8 +422,20 @@ function languageOptionsMarkup(groupId, type, selectedValue) {
       courses,
       selectedValue,
       (value) => languageLabelForCourse(value, groupId),
-      (value) => shouldDisableCourse(value, groupId),
+      (value) => shouldDisableCourse(value, ownerGroupId),
     )
+  );
+}
+
+function sourceGroupOptionsMarkup(selectedValue) {
+  return (
+    placeholderOption("Subject source", selectedValue) +
+    groupSixSources
+      .map(
+        (source) =>
+          `<option value="${source.value}"${source.value === selectedValue ? " selected" : ""}>${source.label}</option>`,
+      )
+      .join("")
   );
 }
 
@@ -598,7 +626,7 @@ function clampPointInput(input, max) {
 }
 
 function defaultPointsForComponent(component) {
-  return component.bounds.find((range) => range.grade === "6")?.from || 0;
+  return 0;
 }
 
 function componentsFor(boundary) {
@@ -643,13 +671,17 @@ function createSubjectRow(group) {
   const row = document.createElement("div");
   row.className = "subject-row";
   row.dataset.group = group.id;
+  const isGroupSix = group.id === "arts";
 
   row.innerHTML = `
     <div class="subject-controls">
       <span class="group-label">${group.label}</span>
       <div class="subject-picker">
+        <select class="source-group-select" name="source-${group.id}" aria-label="${group.label} subject source"${isGroupSix ? "" : " hidden disabled"}>
+          ${isGroupSix ? sourceGroupOptionsMarkup(pendingValue) : placeholderOption("Subject source", pendingValue)}
+        </select>
         <select class="subject-select" name="subject-${group.id}" aria-label="${group.label} subject">
-          ${subjectOptionsMarkup(group.id, pendingValue)}
+          ${isGroupSix ? placeholderOption("Pending", pendingValue) : subjectOptionsMarkup(group.id, pendingValue)}
         </select>
         <select class="language-select" name="language-${group.id}" aria-label="${group.label} language" hidden disabled>
           ${placeholderOption("Select language", pendingValue)}
@@ -672,10 +704,36 @@ function createSubjectRow(group) {
 }
 
 function syncDependentSelects(row) {
+  const sourceGroupSelect = row.querySelector(".source-group-select");
   const subjectSelect = row.querySelector(".subject-select");
   const languageSelect = row.querySelector(".language-select");
   const levelSelect = row.querySelector(".level-select");
-  const groupId = row.dataset.group;
+  const ownerGroupId = row.dataset.group;
+  let groupId = ownerGroupId;
+
+  if (ownerGroupId === "arts") {
+    const currentSource = groupSixSources.some(
+      (source) => source.value === sourceGroupSelect.value,
+    )
+      ? sourceGroupSelect.value
+      : pendingValue;
+    sourceGroupSelect.innerHTML = sourceGroupOptionsMarkup(currentSource);
+    sourceGroupSelect.value = currentSource;
+
+    if (!currentSource) {
+      subjectSelect.innerHTML = placeholderOption("Pending", pendingValue);
+      subjectSelect.value = pendingValue;
+      languageSelect.hidden = true;
+      languageSelect.disabled = true;
+      languageSelect.innerHTML = placeholderOption("Select language", pendingValue);
+      levelSelect.innerHTML = placeholderOption("Level", pendingValue);
+      levelSelect.value = pendingValue;
+      levelSelect.disabled = true;
+      return;
+    }
+
+    groupId = currentSource;
+  }
 
   if (isLanguageGroup(groupId)) {
     const currentType = languageSubjectTypes[groupId].some(
@@ -683,7 +741,7 @@ function syncDependentSelects(row) {
     )
       ? subjectSelect.value
       : pendingValue;
-    subjectSelect.innerHTML = subjectOptionsMarkup(groupId, currentType);
+    subjectSelect.innerHTML = subjectOptionsMarkup(groupId, currentType, ownerGroupId);
     subjectSelect.value = currentType;
 
     if (!currentType) {
@@ -702,7 +760,12 @@ function syncDependentSelects(row) {
       : pendingValue;
     languageSelect.hidden = false;
     languageSelect.disabled = false;
-    languageSelect.innerHTML = languageOptionsMarkup(groupId, currentType, currentCourse);
+    languageSelect.innerHTML = languageOptionsMarkup(
+      groupId,
+      currentType,
+      currentCourse,
+      ownerGroupId,
+    );
     languageSelect.value = currentCourse;
 
     if (!currentCourse) {
@@ -729,8 +792,11 @@ function syncDependentSelects(row) {
   const currentCourse = courses.includes(subjectSelect.value)
     ? subjectSelect.value
     : pendingValue;
-  subjectSelect.innerHTML = subjectOptionsMarkup(groupId, currentCourse);
+  subjectSelect.innerHTML = subjectOptionsMarkup(groupId, currentCourse, ownerGroupId);
   subjectSelect.value = currentCourse;
+  languageSelect.hidden = true;
+  languageSelect.disabled = true;
+  languageSelect.innerHTML = placeholderOption("Select language", pendingValue);
 
   if (!currentCourse) {
     levelSelect.innerHTML = placeholderOption("Level", pendingValue);
@@ -905,6 +971,7 @@ function updateResults() {
 
 function resetComponentsForSelectedBoundary(event) {
   if (
+    !event.target.classList.contains("source-group-select") &&
     !event.target.classList.contains("subject-select") &&
     !event.target.classList.contains("language-select") &&
     !event.target.classList.contains("level-select") &&
@@ -925,7 +992,19 @@ function resetComponentsForSelectedBoundary(event) {
     refreshCourseAvailability();
     return;
   }
+  if (event.target.classList.contains("source-group-select")) {
+    row.querySelector(".subject-select").value = pendingValue;
+    row.querySelector(".language-select").value = pendingValue;
+    row.querySelector(".level-select").value = pendingValue;
+  }
   if (event.target.classList.contains("subject-select") && isLanguageGroup(row.dataset.group)) {
+    row.querySelector(".language-select").value = pendingValue;
+    row.querySelector(".level-select").value = pendingValue;
+  }
+  if (
+    event.target.classList.contains("subject-select") &&
+    isLanguageGroup(effectiveGroupForRow(row))
+  ) {
     row.querySelector(".language-select").value = pendingValue;
     row.querySelector(".level-select").value = pendingValue;
   }
@@ -950,11 +1029,9 @@ subjectGroups.forEach((group) => {
   subjectsList.append(row);
 });
 
-tokEssayPoints.value =
-  tokEssayBoundary.bounds.find((range) => range.grade === "B")?.from || 0;
-tokExhibitionPoints.value =
-  tokExhibitionBoundary.bounds.find((range) => range.grade === "B")?.from || 0;
-eePoints.value = eeBoundary.bounds.find((range) => range.grade === "B")?.from || 0;
+tokEssayPoints.value = 0;
+tokExhibitionPoints.value = 0;
+eePoints.value = 0;
 tokEssayPoints.max = tokEssayBoundary.max;
 tokExhibitionPoints.max = tokExhibitionBoundary.max;
 eePoints.max = eeBoundary.max;
