@@ -807,6 +807,54 @@ dd {
   line-height: 1.5;
 }
 
+.resources-band {
+  display: grid;
+  gap: 24px;
+  padding: clamp(42px, 7vw, 78px) clamp(18px, 5vw, 64px);
+  background: #ffffff;
+  border-top: 1px solid var(--line);
+}
+
+.resource-links {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--line);
+}
+
+.resource-links a {
+  display: flex;
+  min-height: 96px;
+  align-items: flex-end;
+  background: #f8fafc;
+  color: var(--ink);
+  font-weight: 700;
+  line-height: 1.35;
+  padding: 16px;
+  text-decoration: none;
+}
+
+.resource-links a:hover,
+.resource-links a:focus-visible,
+.legal-links a:hover,
+.legal-links a:focus-visible {
+  color: var(--accent-dark);
+  text-decoration: underline;
+}
+
+.legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+.legal-links a {
+  color: inherit;
+}
+
 @media (max-width: 1120px) {
   .calculator-layout,
   .advisor-layout {
@@ -828,7 +876,8 @@ dd {
   .hero,
   .feature-grid,
   .advisor-form,
-  .feedback-grid {
+  .feedback-grid,
+  .resource-links {
     grid-template-columns: 1fr;
   }
 
