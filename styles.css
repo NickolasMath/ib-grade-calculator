@@ -153,7 +153,7 @@ main {
 
 .hero-panel,
 .results,
-.feature-grid article {
+.tool-card {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
@@ -617,8 +617,20 @@ dd {
   gap: 18px;
 }
 
-.feature-grid article {
+.tool-card {
+  display: grid;
+  gap: 8px;
   padding: 22px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.tool-card:hover {
+  border-color: rgba(15, 118, 110, 0.45);
+  box-shadow: 0 12px 30px rgba(23, 32, 42, 0.1);
+  transform: translateY(-2px);
 }
 
 .feature-grid h3 {
@@ -629,6 +641,10 @@ dd {
   margin: 0;
   color: var(--muted);
   line-height: 1.55;
+}
+
+.coming-soon {
+  background: #f8fafc;
 }
 
 .pricing-band {
