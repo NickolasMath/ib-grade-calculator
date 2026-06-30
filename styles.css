@@ -522,6 +522,26 @@ dd {
   border-top: 1px solid var(--line);
 }
 
+.advisor-eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.advisor-beta-note {
+  border: 1px solid #f0c36a;
+  border-radius: 999px;
+  background: #fff7df;
+  color: #7c5200;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-transform: none;
+}
+
 .advisor-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
