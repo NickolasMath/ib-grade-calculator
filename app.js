@@ -54,6 +54,10 @@ const tokExhibitionLetter = document.querySelector("#tok-exhibition-letter");
 const tokLetter = document.querySelector("#tok-letter");
 const eeLetter = document.querySelector("#ee-letter");
 const timezoneInputs = [...document.querySelectorAll("input[name='global-timezone']")];
+const advisorForm = document.querySelector("#advisor-form");
+const advisorOutput = document.querySelector("#advisor-output");
+const aiAdvisorEndpoint =
+  window.AI_ADVISOR_ENDPOINT || localStorage.getItem("aiAdvisorEndpoint") || "/api/advisor";
 const tokEssayBoundary = tokBoundary.components.find(
   (component) => component.name === "THEORY OF KNOWLEDGE",
 );
@@ -969,6 +973,103 @@ function updateResults() {
   }
 }
 
+function selectedSubjectSummary(row) {
+  const boundary = getRowBoundary(row);
+  const group = subjectGroups.find((item) => item.id === row.dataset.group);
+  if (!boundary) {
+    return {
+      group: group?.label || row.dataset.group,
+      status: "Pending",
+    };
+  }
+
+  const finalPercent = row.querySelector(".final-percent").textContent;
+  const grade = row.querySelector(".grade-output").textContent;
+  return {
+    group: group?.label || row.dataset.group,
+    subject: boundary.course,
+    level: boundary.level,
+    timezone: boundary.timezone,
+    grade,
+    finalPercent,
+  };
+}
+
+function collectAdvisorPayload() {
+  updateResults();
+  return {
+    score: {
+      total: totalScore.textContent,
+      subjectPoints: subjectPoints.textContent,
+      corePoints: corePoints.textContent,
+      diplomaStatus: diplomaStatus.textContent,
+    },
+    core: {
+      tok: {
+        percent: tokPercent.textContent,
+        letter: tokLetter.textContent,
+        essay: tokEssayOutput.textContent,
+        exhibition: tokExhibitionOutput.textContent,
+      },
+      ee: {
+        points: eeOutput.textContent,
+        percent: eePercent.textContent,
+        letter: eeLetter.textContent,
+      },
+    },
+    subjects: [...document.querySelectorAll(".subject-row")].map(selectedSubjectSummary),
+    preferences: {
+      countries: document.querySelector("#advisor-countries").value.trim(),
+      major: document.querySelector("#advisor-major").value.trim(),
+      budget: document.querySelector("#advisor-budget").value.trim(),
+      english: document.querySelector("#advisor-english").value.trim(),
+      notes: document.querySelector("#advisor-notes").value.trim(),
+    },
+  };
+}
+
+function validateAdvisorPayload(payload) {
+  if (!payload.preferences.major) {
+    return "Enter an intended major before generating guidance.";
+  }
+  if (!payload.preferences.countries) {
+    return "Enter at least one target country or region.";
+  }
+  const selectedCount = payload.subjects.filter((subject) => subject.status !== "Pending").length;
+  if (selectedCount < 3) {
+    return "Select more IB subjects first so the AI can evaluate the academic profile.";
+  }
+  return "";
+}
+
+async function requestAdvisorGuidance(event) {
+  event.preventDefault();
+  const payload = collectAdvisorPayload();
+  const validationError = validateAdvisorPayload(payload);
+  if (validationError) {
+    advisorOutput.textContent = validationError;
+    return;
+  }
+
+  advisorOutput.textContent = "Generating AI guidance...";
+
+  try {
+    const response = await fetch(aiAdvisorEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || "AI advisor endpoint is not available yet.");
+    }
+    advisorOutput.textContent = data.guidance || "No guidance was returned.";
+  } catch (error) {
+    advisorOutput.textContent =
+      `${error.message}\n\nDeployment note: GitHub Pages cannot run private AI API keys. Deploy this repo on Vercel or another serverless host and set OPENAI_API_KEY, or configure window.AI_ADVISOR_ENDPOINT to a secure backend URL.`;
+  }
+}
+
 function resetComponentsForSelectedBoundary(event) {
   if (
     !event.target.classList.contains("source-group-select") &&
@@ -1046,5 +1147,6 @@ document
 document
   .querySelector("#calculator-form")
   .addEventListener("change", updateResults);
+advisorForm.addEventListener("submit", requestAdvisorGuidance);
 
 updateResults();
