@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://ibcalc.com/sitemap.xml
+Sitemap: https://www.ibcalc.com/sitemap.xml
