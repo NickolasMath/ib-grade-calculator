@@ -70,6 +70,12 @@ const feedbackEndpoint =
   (location.hostname.endsWith("github.io")
     ? "https://ib-grade-calculator-rouge.vercel.app/api/feedback"
     : "/api/feedback");
+
+document.querySelectorAll("[data-disabled-link]").forEach((link) => {
+  link.addEventListener("click", (event) => {
+    event.preventDefault();
+  });
+});
 const tokEssayBoundary = tokBoundary.components.find(
   (component) => component.name === "THEORY OF KNOWLEDGE",
 );
