@@ -1,4 +1,5 @@
 const OPENAI_API_URL = "https://api.openai.com/v1/responses";
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
@@ -11,7 +12,7 @@ function readBody(req) {
     return Promise.resolve(req.body);
   }
   if (typeof req.body === "string") {
-    return Promise.resolve(JSON.parse(req.body || "{}"));
+    return Promise.resolve(JSON.parse(req.body.replace(/^\uFEFF/, "").trim() || "{}"));
   }
   return new Promise((resolve, reject) => {
     let body = "";
@@ -20,7 +21,8 @@ function readBody(req) {
     });
     req.on("end", () => {
       try {
-        resolve(body ? JSON.parse(body) : {});
+        const normalizedBody = body.replace(/^\uFEFF/, "").trim();
+        resolve(normalizedBody ? JSON.parse(normalizedBody) : {});
       } catch (error) {
         reject(error);
       }
@@ -56,6 +58,90 @@ Return this structure:
 `;
 }
 
+async function callOpenAi(prompt) {
+  if (!process.env.OPENAI_API_KEY) {
+    return {
+      statusCode: 500,
+      error: "OPENAI_API_KEY is not configured on the server.",
+    };
+  }
+
+  const response = await fetch(OPENAI_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+      input: prompt,
+      temperature: 0.3,
+      max_output_tokens: 1200,
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    return {
+      statusCode: response.status,
+      error: data.error?.message || "OpenAI request failed.",
+    };
+  }
+
+  return {
+    guidance:
+      data.output_text ||
+      data.output
+        ?.flatMap((item) => item.content || [])
+        .map((content) => content.text)
+        .filter(Boolean)
+        .join("\n\n") ||
+      "",
+  };
+}
+
+async function callGroq(prompt) {
+  if (!process.env.GROQ_API_KEY) {
+    return {
+      statusCode: 500,
+      error: "GROQ_API_KEY is not configured on the server.",
+    };
+  }
+
+  const response = await fetch(GROQ_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: process.env.GROQ_MODEL || "llama-3.1-8b-instant",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a cautious university admissions planning assistant for IB Diploma students.",
+        },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.3,
+      max_tokens: 1200,
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    return {
+      statusCode: response.status,
+      error: data.error?.message || "Groq request failed.",
+    };
+  }
+
+  return {
+    guidance: data.choices?.[0]?.message?.content || "",
+  };
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -71,45 +157,22 @@ module.exports = async function handler(req, res) {
     return sendJson(res, 405, { error: "Method not allowed" });
   }
 
-  if (!process.env.OPENAI_API_KEY) {
-    return sendJson(res, 500, {
-      error: "OPENAI_API_KEY is not configured on the server.",
-    });
-  }
-
   try {
     const profile = await readBody(req);
-    const response = await fetch(OPENAI_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
-        input: buildPrompt(profile),
-        temperature: 0.3,
-        max_output_tokens: 1200,
-      }),
-    });
+    const provider = (process.env.AI_PROVIDER || "openai").toLowerCase();
+    const prompt = buildPrompt(profile);
+    const result = provider === "groq" ? await callGroq(prompt) : await callOpenAi(prompt);
 
-    const data = await response.json();
-    if (!response.ok) {
-      return sendJson(res, response.status, {
-        error: data.error?.message || "OpenAI request failed.",
+    if (result.error) {
+      return sendJson(res, result.statusCode || 500, {
+        error: result.error,
       });
     }
 
-    const guidance =
-      data.output_text ||
-      data.output
-        ?.flatMap((item) => item.content || [])
-        .map((content) => content.text)
-        .filter(Boolean)
-        .join("\n\n") ||
-      "";
-
-    return sendJson(res, 200, { guidance });
+    return sendJson(res, 200, {
+      guidance: result.guidance,
+      provider,
+    });
   } catch (error) {
     return sendJson(res, 500, {
       error: error.message || "AI advisor failed.",
