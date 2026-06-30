@@ -1069,8 +1069,26 @@ async function requestAdvisorGuidance(event) {
     }
     advisorOutput.textContent = data.guidance || "No guidance was returned.";
   } catch (error) {
-    advisorOutput.textContent =
-      `${error.message}\n\nDeployment note: GitHub Pages cannot run private AI API keys. Deploy this repo on Vercel or another serverless host and set OPENAI_API_KEY, or configure window.AI_ADVISOR_ENDPOINT to a secure backend URL.`;
+    const message = error.message || "AI advisor failed.";
+    const lowerMessage = message.toLowerCase();
+    const deploymentHint =
+      lowerMessage.includes("failed to fetch") ||
+      lowerMessage.includes("endpoint is not available") ||
+      lowerMessage.includes("openai_api_key is not configured");
+    const quotaHint =
+      lowerMessage.includes("quota") ||
+      lowerMessage.includes("billing") ||
+      lowerMessage.includes("insufficient_quota");
+
+    if (quotaHint) {
+      advisorOutput.textContent =
+        `${message}\n\nBilling note: the AI backend is connected, but the OpenAI account has no available API quota. Add billing credits or increase the API usage limit in the OpenAI Platform billing settings, then try again.`;
+      return;
+    }
+
+    advisorOutput.textContent = deploymentHint
+      ? `${message}\n\nDeployment note: GitHub Pages cannot run private AI API keys. Use the Vercel site or configure window.AI_ADVISOR_ENDPOINT to a secure backend URL.`
+      : message;
   }
 }
 
