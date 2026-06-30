@@ -80,6 +80,7 @@ a {
 
 .nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 18px;
   color: var(--muted);
   font-size: 0.95rem;
@@ -909,7 +910,8 @@ dd {
 @media (max-width: 700px) {
   .nav {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 10px 18px;
   }
 
   .subjects-header {
