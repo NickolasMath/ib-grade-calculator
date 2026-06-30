@@ -1,5 +1,34 @@
 const OPENAI_API_URL = "https://api.openai.com/v1/responses";
 
+function sendJson(res, statusCode, payload) {
+  res.statusCode = statusCode;
+  res.setHeader("Content-Type", "application/json");
+  res.end(JSON.stringify(payload));
+}
+
+function readBody(req) {
+  if (req.body && typeof req.body === "object") {
+    return Promise.resolve(req.body);
+  }
+  if (typeof req.body === "string") {
+    return Promise.resolve(JSON.parse(req.body || "{}"));
+  }
+  return new Promise((resolve, reject) => {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk;
+    });
+    req.on("end", () => {
+      try {
+        resolve(body ? JSON.parse(body) : {});
+      } catch (error) {
+        reject(error);
+      }
+    });
+    req.on("error", reject);
+  });
+}
+
 function buildPrompt(profile) {
   return `
 You are an IB university admissions planning assistant.
@@ -33,22 +62,23 @@ module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
-    return res.status(204).end();
+    res.statusCode = 204;
+    return res.end();
   }
 
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendJson(res, 405, { error: "Method not allowed" });
   }
 
   if (!process.env.OPENAI_API_KEY) {
-    return res.status(500).json({
+    return sendJson(res, 500, {
       error: "OPENAI_API_KEY is not configured on the server.",
     });
   }
 
   try {
-    const profile = req.body || {};
+    const profile = await readBody(req);
     const response = await fetch(OPENAI_API_URL, {
       method: "POST",
       headers: {
@@ -65,7 +95,7 @@ module.exports = async function handler(req, res) {
 
     const data = await response.json();
     if (!response.ok) {
-      return res.status(response.status).json({
+      return sendJson(res, response.status, {
         error: data.error?.message || "OpenAI request failed.",
       });
     }
@@ -79,9 +109,9 @@ module.exports = async function handler(req, res) {
         .join("\n\n") ||
       "";
 
-    return res.status(200).json({ guidance });
+    return sendJson(res, 200, { guidance });
   } catch (error) {
-    return res.status(500).json({
+    return sendJson(res, 500, {
       error: error.message || "AI advisor failed.",
     });
   }
