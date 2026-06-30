@@ -31,6 +31,14 @@ function readBody(req) {
   });
 }
 
+function normalizeApiKey(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^Bearer\s+/i, "")
+    .replace(/^["']|["']$/g, "")
+    .trim();
+}
+
 function buildPrompt(profile) {
   return `
 You are an IB university admissions planning assistant.
@@ -59,7 +67,8 @@ Return this structure:
 }
 
 async function callOpenAi(prompt) {
-  if (!process.env.OPENAI_API_KEY) {
+  const apiKey = normalizeApiKey(process.env.OPENAI_API_KEY);
+  if (!apiKey) {
     return {
       statusCode: 500,
       error: "OPENAI_API_KEY is not configured on the server.",
@@ -70,7 +79,7 @@ async function callOpenAi(prompt) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
@@ -101,7 +110,8 @@ async function callOpenAi(prompt) {
 }
 
 async function callGroq(prompt) {
-  if (!process.env.GROQ_API_KEY) {
+  const apiKey = normalizeApiKey(process.env.GROQ_API_KEY);
+  if (!apiKey) {
     return {
       statusCode: 500,
       error: "GROQ_API_KEY is not configured on the server.",
@@ -112,7 +122,7 @@ async function callGroq(prompt) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model: process.env.GROQ_MODEL || "llama-3.1-8b-instant",
