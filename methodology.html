@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="How NickoMath IB Grade Calculator uses component marks, assessment weightings, grade boundaries, TOK, EE, and Diploma conditions." />
+    <link rel="canonical" href="https://www.ibcalc.com/methodology.html" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any" />
+    <title>Methodology and Sources | IB Grade Calculator</title>
+    <link rel="stylesheet" href="/content.css" />
+  </head>
+  <body class="content-page">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="NickoMath IB Grade Calculator home"><span class="brand-mark">NM</span><span class="brand-text"><span>NickoMath</span><small>IB Grade Calculator</small></span></a>
+      <nav class="nav" aria-label="Primary navigation"><a href="/">Calculator</a><a href="/guides/how-ib-grades-are-calculated.html">Guides</a><a href="/contact.html">Contact</a></nav>
+    </header>
+    <main>
+      <section class="content-header"><div class="content-header-inner"><p class="eyebrow">Methodology &amp; sources</p><h1>How the calculator produces an estimate</h1><p>Maintained by NickoMath. Last reviewed 2 July 2026. This page documents the calculation method, source hierarchy, quality checks, and limits of the current May 2025 dataset.</p></div></section>
+      <article class="article">
+        <h2>Current data scope</h2>
+        <p>The calculator is built around the May 2025 grade-boundary file supplied for this project. A subject estimate is matched by course, SL or HL level, and examination time zone where applicable. TZ0 entries are treated as common entries that remain available regardless of the selected global time zone.</p>
+        <p><a href="/grade-boundaries.pdf">View the May 2025 grade-boundary reference PDF used by this project.</a></p>
+
+        <h2>Subject calculation</h2>
+        <p>Each assessment component is calculated separately. The entered points are divided by the component maximum and multiplied by that component’s percentage weighting:</p>
+        <p><strong>Weighted contribution = (points earned ÷ maximum points) × component weight</strong></p>
+        <p>All weighted contributions are added to create the estimated final subject percentage. That percentage is converted to the subject’s overall mark scale and matched against the selected May 2025 grade boundary to produce an estimated grade from 1 to 7.</p>
+        <p class="article-note">Component-level grade boundaries are not used to average component grades. The calculator combines weighted component marks first, then applies the overall subject boundary.</p>
+
+        <h2>Assessment weightings</h2>
+        <p>Weightings are maintained by subject and level because Paper 1, Paper 2, Paper 3, internal assessment, oral, portfolio, performance, and project structures differ. The preferred source order is:</p>
+        <ol>
+          <li>Current official IB subject guides or subject briefs.</li>
+          <li>Official assessment summaries, examiner instructions, or programme documentation.</li>
+          <li>Publicly available school or assessment documentation that reproduces the applicable IB structure.</li>
+          <li>Manually reviewed secondary references for pilot or school-based syllabus subjects when complete official public material is unavailable.</li>
+        </ol>
+        <p>Some school-based syllabus and pilot subjects are harder to verify publicly. Their estimates should receive additional confirmation from a DP coordinator and the current course guide.</p>
+
+        <h2>TOK, EE, and core points</h2>
+        <p>The TOK estimate combines the essay at approximately 66.6% and the exhibition at approximately 33.3%, then converts the result to a TOK letter grade. The extended essay mark is converted separately to an EE letter grade. TOK and EE letters are combined using the Diploma core-points matrix to award zero to three core points.</p>
+        <p>An E in TOK or EE is treated as a failing Diploma condition. CAS is assumed complete for calculator display because it has no numerical grade; only the school can confirm actual CAS completion.</p>
+
+        <h2>Diploma condition checks</h2>
+        <p>The result panel checks the main published award conditions, including the 24-point minimum, subject-grade distribution, HL and SL point minimums, completion of all grades, core failing conditions, and assumed CAS completion. It does not validate registration conflicts, academic misconduct decisions, course-overlap restrictions, or every exceptional rule administered by a school.</p>
+
+        <h2>Quality controls</h2>
+        <ul>
+          <li>Subject options are grouped by the six DP curriculum areas.</li>
+          <li>Level and time-zone combinations are filtered to combinations present in the dataset.</li>
+          <li>Interdisciplinary selections are prevented from being counted twice.</li>
+          <li>Component weights are expected to total 100% for a complete assessment structure.</li>
+          <li>User reports are reviewed when a boundary, maximum mark, or weighting appears inconsistent.</li>
+        </ul>
+
+        <h2>Known limitations</h2>
+        <ul>
+          <li>The current calculator is specific to the configured May 2025 data and should not be assumed to represent another session.</li>
+          <li>Official moderation can change internal-assessment marks.</li>
+          <li>Predicted grades may include teacher judgement beyond this numerical estimate.</li>
+          <li>Course guides and assessment models can change after a syllabus review.</li>
+          <li>The AI university advisor is experimental and does not verify admissions decisions.</li>
+        </ul>
+
+        <h2>Primary programme references</h2>
+        <ul>
+          <li><a href="https://ibo.org/programmes/diploma-programme/curriculum/" rel="noopener noreferrer">IB Diploma Programme curriculum</a></li>
+          <li><a href="https://ibo.org/programmes/diploma-programme/assessment-and-exams/" rel="noopener noreferrer">IB assessment and examinations overview</a></li>
+          <li><a href="https://ibo.org/programmes/diploma-programme/assessment-and-exams/getting-results/assessment-faq/" rel="noopener noreferrer">IB assessment FAQ and results information</a></li>
+        </ul>
+        <p>These links establish programme context. Individual component weightings should be checked against the current guide for the exact subject and assessment year.</p>
+
+        <h2>Corrections</h2>
+        <p>If you identify an error, submit the subject, level, time zone, component, expected value, and supporting source through the <a href="/contact.html">contact page</a>. NickoMath is independent and is not reviewed or endorsed by the International Baccalaureate Organization.</p>
+      </article>
+    </main>
+    <footer class="content-footer"><div class="content-footer-inner"><span>Copyright 2026 NickoMath.</span><nav><a href="/about.html">About</a><a href="/contact.html">Contact</a><a href="/methodology.html">Methodology</a><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a></nav></div></footer>
+  </body>
+</html>
